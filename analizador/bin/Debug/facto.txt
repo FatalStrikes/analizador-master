@@ -10,6 +10,10 @@ facto=facto*a;
 a=a-1;
 }until(a>0);
 write facto;
+if (a<=0) then {
+
+} fi
 a==3;
 a>=2;
+a!=2;
 }

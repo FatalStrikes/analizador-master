@@ -233,6 +233,8 @@ namespace analizador
 					token.type = TknType.TKN_FLOAT;
 				} else if (String.Compare (new string (token.lexema), "else", false) == 0) {
 					token.type = TknType.TKN_ELSE;
+				} else if (String.Compare (new string (token.lexema), "then", false) == 0) {
+					token.type = TknType.TKN_THEN;
 				} else if (String.Compare (new string (token.lexema), "fi", false) == 0) {
 					token.type = TknType.TKN_FI;
 				} else if (String.Compare (new string (token.lexema), "do", false) == 0) {
