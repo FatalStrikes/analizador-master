@@ -35,17 +35,18 @@ namespace analizador
 //			new Token (TknType.TKN_IF, "if"),
 //			new Token (TknType.TKN_IF, "if"),
 //		};
-			
-		static public Token getToken(string fs){
-			//int count = 0;
-			buffer = fs.ToCharArray();
+
+		static public Token getToken(string code){
+			buffer = code.ToCharArray();
 			curState = State.IN_START;
 			Token token = new Token();
 			int tokIndex = 0;
+
 			if(isEOF()){
 				return new Token(TknType.TKN_EOF, "");
 			}
 
+			// DOES ALL THE HEAVY-LIFTING
 			while (curState != State.IN_DONE) {
 				switch(curState){
 
@@ -69,8 +70,10 @@ namespace analizador
 						curState = State.IN_COMPARE;
 					}else if(buffer[bufIndex] == '<'){
 						curState = State.IN_COMPARE;
-					}else if(buffer[bufIndex] == '='){
+					}else if(buffer[bufIndex] == '!'){
 						curState = State.IN_COMPARE;
+					}else if(buffer[bufIndex] == '='){
+						curState = State.IN_ASSIGN;
 					}else if(buffer[bufIndex] == '*'){
 						curState = State.IN_MULTI;
 					}else if(buffer[bufIndex] == '/'){
@@ -89,8 +92,8 @@ namespace analizador
 					token.lexema [tokIndex] = buffer [bufIndex];
 					tokIndex++;
 					break;
-				
-				
+
+				// IDENTIFY ALL ID TOKENS, ANYTHING THAT STARTS WITH A LETTER IS A ID UNTIL IDENTIFIED AS RESERVED WORD
 				case State.IN_ID:
 					if(! (Char.IsLetterOrDigit(buffer[bufIndex]) || buffer[bufIndex] == '_')){
 						curState = State.IN_DONE;
@@ -107,9 +110,8 @@ namespace analizador
 					token.lexema [tokIndex] = buffer [bufIndex];
 					tokIndex++;
 					break;
-				
-				
-				
+
+
 				case State.IN_NUM:
 					if (!Char.IsDigit (buffer [bufIndex]) && !buffer[bufIndex].Equals('.')) {
 						curState = State.IN_DONE;
@@ -132,15 +134,13 @@ namespace analizador
 					curState = State.IN_DONE;
 					bufIndex--;
 					break;
-
-
 				case State.IN_RBRACKET:
 					token.type = TknType.TKN_RBRACK;
 					curState = State.IN_DONE;
 					bufIndex--;
 					break;
 
-				
+
 				case State.IN_LPAREN:
 					token.type = TknType.TKN_LPAREN;
 					curState = State.IN_DONE;
@@ -157,14 +157,8 @@ namespace analizador
 					curState = State.IN_DONE;
 					bufIndex--;
 					break;
-
 				case State.IN_MINUS:
 					token.type = TknType.TKN_MINUS;
-					curState = State.IN_DONE;
-					bufIndex--;
-					break;
-				case State.IN_COMPARE:
-					token.type = TknType.TKN_COMPARE;
 					curState = State.IN_DONE;
 					bufIndex--;
 					break;
@@ -173,16 +167,37 @@ namespace analizador
 					curState = State.IN_DONE;
 					bufIndex--;
 					break;
-//				case State.IN_DIV:
-//					token.type = TknType.TKN_DIV;
-//					curState = State.IN_DONE;
-//					bufIndex--;
-//					break;
 
 				case State.IN_SEMICOLON:
 					token.type = TknType.TKN_SEMICOLON;
 					curState = State.IN_DONE;
 					bufIndex--;
+					break;
+
+				case State.IN_COMPARE:
+					if (buffer [bufIndex] != '=') {
+						//token.lexema [tokIndex] = buffer [bufIndex];
+						token.type = TknType.TKN_COMPARE;
+						curState = State.IN_DONE;
+						bufIndex--;
+					} else {
+						token.lexema [tokIndex] = buffer [bufIndex];
+						token.type = TknType.TKN_COMPARE;
+						curState = State.IN_DONE;
+					}
+					break;
+
+				case State.IN_ASSIGN:
+					if (buffer [bufIndex] == '=') {
+						token.lexema [tokIndex] = buffer [bufIndex];
+						token.type = TknType.TKN_COMPARE;
+						curState = State.IN_DONE;
+					} else {
+						token.type = TknType.TKN_ASSIGN;
+						curState = State.IN_DONE;
+						bufIndex--;
+					}
+
 					break;
 
 				case State.IN_COMMENT:
@@ -203,9 +218,12 @@ namespace analizador
 				}
 
 				// Next char! FOR DEBUG
-				// Console.WriteLine (new String(token.lexema) + "->" + curState);
+//				 Console.WriteLine (new String(token.lexema) + "->" + curState);
 				bufIndex++;
 			}
+
+
+			// IDENTIFY ANY TOKEN ID AND CHECK IF IT IS A RESERVED WORD
 			if (token.type == TknType.TKN_ID) {
 				if (String.Compare (new string (token.lexema), "int", false) == 0) {
 					token.type = TknType.TKN_INT;
@@ -214,7 +232,7 @@ namespace analizador
 				} else if (String.Compare (new string (token.lexema), "float", false) == 0) {
 					token.type = TknType.TKN_FLOAT;
 				} else if (String.Compare (new string (token.lexema), "else", false) == 0) {
-					token.type = TknType.TKN_ELSE;		
+					token.type = TknType.TKN_ELSE;
 				} else if (String.Compare (new string (token.lexema), "fi", false) == 0) {
 					token.type = TknType.TKN_FI;
 				} else if (String.Compare (new string (token.lexema), "do", false) == 0) {
@@ -233,20 +251,24 @@ namespace analizador
 					token.type = TknType.TKN_OR;
 				} else if (String.Compare (new string (token.lexema), "not", false) == 0) {
 					token.type = TknType.TKN_NOT;
-				} 
+				}
 			}
 
 			return token;
 		}
+
+
+		// END OF FILE
 		private static bool isEOF()
 		{
 			if(bufIndex == buffer.Length)	return true;
 			return false;
 		}
 
+		// NOT USED?
 		private static bool isDelim(char c)
 		{
-			char [] delim = {' ','\n','\t'};
+			char [] delim = {' ','\n','\t', '\r'};
 			for(int i=0;i<3;i++)
 			{
 				if(c==delim[i])
@@ -254,8 +276,9 @@ namespace analizador
 			}
 			return false;
 		}
-			
-		static char[] buffer; 
+
+		// EXTERNAL IDENTIFIERS
+		static char[] buffer;
 		static int bufIndex;
 		static State curState;
 		static Token curToken;
@@ -266,18 +289,18 @@ namespace analizador
 				Console.Write ("No File Found");
 				return;
 			}
-			String tehCode = File.ReadAllText (args.GetValue (0).ToString());  
+			String tehCode = File.ReadAllText (args.GetValue (0).ToString());
 			curToken = getToken (tehCode);
 			while(TknType.TKN_EOF != curToken.type){
 				if (curToken.type != TknType.TKN_NaN) {
-					// Console.WriteLine ("=========================");
-					Console.WriteLine ((curToken.type + "->" + new string (curToken.lexema)));
-					// Console.WriteLine ("Current Char" + bufIndex + "of " + buffer.Length);
+//					Console.WriteLine ("=========================");
+					Console.WriteLine ((curToken.type + " --> " + new string (curToken.lexema)));
+//					Console.WriteLine ("Current Char" + bufIndex + "of " + buffer.Length);
 				}
 				curToken = getToken (tehCode);
 			}
+			Console.WriteLine ((TknType.TKN_EOF + " -->  EOF"));
 			return;
-
 		}
 	}
 }

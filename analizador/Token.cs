@@ -20,7 +20,7 @@ namespace analizador
 		// TOKENS SIMBOLOS
 		TKN_ADD,TKN_MINUS,TKN_MULTI,TKN_DIV,TKN_LESS,TKN_LESSEQ,TKN_GRT,TKN_GRTEQ,TKN_EQUALS,TKN_SEMICOLON,TKN_COMA,TKN_LPAREN,TKN_RPAREN,TKN_LBRACK,TKN_RBRACK,TKN_COMPARE,
 		// TOKENS ESPECIALES
-		TKN_ID,TKN_NUM,TKN_EOF
+		TKN_ID,TKN_NUM,TKN_ASSIGN,TKN_EOF
 	}
 
 	public enum State{
@@ -43,10 +43,6 @@ namespace analizador
 			type = t;
 			lexema = l.ToCharArray();
 		}
-	}
-
-	public class Node{
-		
 	}
 }
 
